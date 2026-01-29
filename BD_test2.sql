@@ -127,7 +127,7 @@ INSERT INTO materiels (code_barre, type, marque, modele, numero_serie, caracteri
 
 -- Créer un trigger pour l'historique
 DELIMITER $$
-CREATE TRIGGER after_materiel_update
+CREATE DEFINER=`root`@`localhost` TRIGGER after_materiel_update
 AFTER UPDATE ON materiels
 FOR EACH ROW
 BEGIN
