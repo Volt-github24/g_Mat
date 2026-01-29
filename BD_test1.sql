@@ -1,0 +1,2 @@
+INSERT INTO utilisateurs (username, password, nom, prenom, role, email) 
+VALUES ('admin', '$2y$10$YourHashedPasswordHere', 'Admin', 'ONACC', 'admin', 'admin@onacc.com');affectationsaffectationsgestion_materiel_onacc
