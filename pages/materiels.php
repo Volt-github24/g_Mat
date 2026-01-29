@@ -38,7 +38,7 @@ $materiels = $pdo->query($query)->fetchAll();
         <div class="row">
             <div class="col-md-3">
                 <label class="form-label">Type</label>
-                <select class="form-select" id="filterType" onchange="filterTable()">
+                <select class="form-select" id="filterType" onchange="applyMaterielsFilters()"><!-- filter type -->
                     <option value="">Tous</option>
                     <option value="ordinateur">Ordinateurs</option>
                     <option value="ecran">Écrans</option>
@@ -50,7 +50,7 @@ $materiels = $pdo->query($query)->fetchAll();
             
             <div class="col-md-3">
                 <label class="form-label">Statut</label>
-                <select class="form-select" id="filterStatut" onchange="filterTable()">
+                <select class="form-select" id="filterStatut" onchange="applyMaterielsFilters()"><!-- filter status -->
                     <option value="">Tous</option>
                     <option value="stock">Stock</option>
                     <option value="affecte">Affecté</option>
@@ -61,7 +61,7 @@ $materiels = $pdo->query($query)->fetchAll();
             
             <div class="col-md-3">
                 <label class="form-label">État</label>
-                <select class="form-select" id="filterEtat" onchange="filterTable()">
+                <select class="form-select" id="filterEtat" onchange="applyMaterielsFilters()"><!-- filter etat -->
                     <option value="">Tous</option>
                     <option value="neuf">Neuf</option>
                     <option value="bon">Bon</option>
@@ -72,8 +72,7 @@ $materiels = $pdo->query($query)->fetchAll();
             
             <div class="col-md-3">
                 <label class="form-label">Recherche</label>
-                <input type="text" class="form-control" id="searchInput" 
-                       placeholder="Code, marque, modèle..." onkeyup="filterTable()">
+                <input type="text" class="form-control" id="searchInput" placeholder="Code, marque, modèle..." onkeyup="applyMaterielsFilters()"><!-- search input -->
             </div>
         </div>
     </div>
@@ -333,7 +332,7 @@ $(document).ready(function() {
     }); // End DataTable init
 }); // End document ready
 
-function filterTable() { // Filter table rows
+function applyMaterielsFilters() { // Filter table rows
     var type = ($('#filterType').val() || '').toLowerCase(); // Read type filter
     var statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
     var etat = ($('#filterEtat').val() || '').toLowerCase(); // Read condition filter
@@ -346,7 +345,7 @@ function filterTable() { // Filter table rows
         materielsTable.draw(); // Redraw table
         return; // Stop fallback
     } // End DataTable guard
-} // End filterTable
+} // End applyMaterielsFilters
 function viewMateriel(id) { // View material
     window.location.href = 'edit_materiel.php?id=' + id; // Redirect to edit page
 } // End viewMateriel

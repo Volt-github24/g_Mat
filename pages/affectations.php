@@ -138,7 +138,7 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
         <div class="row">
             <div class="col-md-3">
                 <label class="form-label">Statut</label>
-                <select class="form-select" id="filterStatut" onchange="filterTable()">
+                <select class="form-select" id="filterStatut" onchange="applyAffectationsFilters()"><!-- filter statut -->
                     <option value="">Tous</option>
                     <option value="en_attente">En attente</option>
                     <option value="approuve">Approuvé</option>
@@ -149,7 +149,7 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
             
             <div class="col-md-3">
                 <label class="form-label">Département</label>
-                <select class="form-select" id="filterDepartement" onchange="filterTable()">
+                <select class="form-select" id="filterDepartement" onchange="applyAffectationsFilters()"><!-- filter departement -->
                     <option value="">Tous</option>
                     <?php
                     $depts = $pdo->query("SELECT DISTINCT departement FROM utilisateurs WHERE departement IS NOT NULL ORDER BY departement")->fetchAll();
@@ -163,13 +163,12 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
             
             <div class="col-md-3">
                 <label class="form-label">Date de début</label>
-                <input type="date" class="form-control" id="filterDateDebut" onchange="filterTable()">
+                <input type="date" class="form-control" id="filterDateDebut" onchange="applyAffectationsFilters()"><!-- filter date -->
             </div>
             
             <div class="col-md-3">
                 <label class="form-label">Recherche</label>
-                <input type="text" class="form-control" id="searchInput" 
-                       placeholder="Utilisateur, matériel, motif..." onkeyup="filterTable()">
+                <input type="text" class="form-control" id="searchInput" placeholder="Utilisateur, matériel, motif..." onkeyup="applyAffectationsFilters()"><!-- search input -->
             </div>
         </div>
     </div>
@@ -383,7 +382,7 @@ function formatDateForSearch(value) { // Format date for search
     return parts[2] + '/' + parts[1] + '/' + parts[0]; // Return dd/mm/yyyy
 } // End formatDateForSearch
 
-function filterTable() {
+function applyAffectationsFilters() { // Filter table rows
     var statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
     var departement = ($('#filterDepartement').val() || '').toLowerCase(); // Read departement filter
     var dateDebut = formatDateForSearch($('#filterDateDebut').val() || ''); // Read date filter
@@ -396,7 +395,7 @@ function filterTable() {
         affectationsTable.draw(); // Redraw table
         return; // Stop fallback
     } // End DataTable guard
-}
+} // End applyAffectationsFilters
 
 function openEditModalById(id) { // Open edit modal by id
     var row = document.querySelector('tr[data-affectation-id="' + id + '"]'); // Locate row
