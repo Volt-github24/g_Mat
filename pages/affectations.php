@@ -22,6 +22,7 @@ $query = "
 ";
 
 $affectations = $pdo->query($query)->fetchAll();
+$preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id'] : 0; // Preselect materiel id
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -31,9 +32,106 @@ $affectations = $pdo->query($query)->fetchAll();
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
             <i class="bi bi-plus-circle"></i> Nouvelle Affectation
         </button>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal"><i class="bi bi-file-earmark-arrow-up"></i> Importer Excel</button><!-- import button -->
     </div>
 </div>
 
+<!-- Modal Edit Affectation -->
+<div class="modal fade" id="editModal" tabindex="-1"><!-- edit modal wrapper -->
+    <div class="modal-dialog modal-lg"><!-- edit modal dialog -->
+        <div class="modal-content"><!-- edit modal content -->
+            <div class="modal-header bg-warning text-white"><!-- edit modal header -->
+                <h5 class="modal-title">Modifier Affectation</h5><!-- edit modal title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button><!-- edit modal close -->
+            </div><!-- end edit modal header -->
+            <form action="process_affectation.php" method="POST" id="editForm"><!-- edit form -->
+                <input type="hidden" name="action" value="edit"><!-- edit action -->
+                <input type="hidden" name="id" id="editAffectationId"><!-- edit id -->
+                <div class="modal-body"><!-- edit modal body -->
+                    <div class="row"><!-- info row -->
+                        <div class="col-md-6 mb-3"><!-- materiel field -->
+                            <label class="form-label">Materiel</label><!-- materiel label -->
+                            <input type="text" class="form-control" id="editMateriel" readonly><!-- materiel input -->
+                        </div><!-- end materiel field -->
+                        <div class="col-md-6 mb-3"><!-- utilisateur field -->
+                            <label class="form-label">Utilisateur</label><!-- utilisateur label -->
+                            <input type="text" class="form-control" id="editUtilisateur" readonly><!-- utilisateur input -->
+                        </div><!-- end utilisateur field -->
+                    </div><!-- end info row -->
+                    <div class="row"><!-- dates row -->
+                        <div class="col-md-6 mb-3"><!-- date debut field -->
+                            <label class="form-label">Date debut *</label><!-- date debut label -->
+                            <input type="date" class="form-control" name="date_debut" id="editDateDebut" required><!-- date debut input -->
+                        </div><!-- end date debut field -->
+                        <div class="col-md-6 mb-3"><!-- date fin field -->
+                            <label class="form-label">Date fin</label><!-- date fin label -->
+                            <input type="date" class="form-control" name="date_fin" id="editDateFin"><!-- date fin input -->
+                        </div><!-- end date fin field -->
+                    </div><!-- end dates row -->
+                    <div class="mb-3"><!-- motif field -->
+                        <label class="form-label">Motif *</label><!-- motif label -->
+                        <textarea class="form-control" name="motif" id="editMotif" rows="3" required></textarea><!-- motif input -->
+                    </div><!-- end motif field -->
+                    <div class="row"><!-- etat row -->
+                        <div class="col-md-6 mb-3"><!-- etat depart field -->
+                            <label class="form-label">Etat depart</label><!-- etat depart label -->
+                            <select class="form-select" name="etat_depart" id="editEtatDepart"><!-- etat depart select -->
+                                <option value="bon">Bon</option><!-- etat bon -->
+                                <option value="neuf">Neuf</option><!-- etat neuf -->
+                                <option value="moyen">Moyen</option><!-- etat moyen -->
+                                <option value="mauvais">Mauvais</option><!-- etat mauvais -->
+                            </select><!-- end etat depart select -->
+                        </div><!-- end etat depart field -->
+                        <div class="col-md-6 mb-3"><!-- etat retour field -->
+                            <label class="form-label">Etat retour</label><!-- etat retour label -->
+                            <select class="form-select" name="etat_retour" id="editEtatRetour"><!-- etat retour select -->
+                                <option value="">-</option><!-- etat empty -->
+                                <option value="bon">Bon</option><!-- etat bon -->
+                                <option value="neuf">Neuf</option><!-- etat neuf -->
+                                <option value="moyen">Moyen</option><!-- etat moyen -->
+                                <option value="mauvais">Mauvais</option><!-- etat mauvais -->
+                            </select><!-- end etat retour select -->
+                        </div><!-- end etat retour field -->
+                    </div><!-- end etat row -->
+                    <div class="mb-3"><!-- observations field -->
+                        <label class="form-label">Observations</label><!-- observations label -->
+                        <textarea class="form-control" name="observations" id="editObservations" rows="2"></textarea><!-- observations input -->
+                    </div><!-- end observations field -->
+                </div><!-- end edit modal body -->
+                <div class="modal-footer"><!-- edit modal footer -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button><!-- edit cancel -->
+                    <button type="submit" class="btn btn-warning">Enregistrer</button><!-- edit submit -->
+                </div><!-- end edit modal footer -->
+            </form><!-- end edit form -->
+        </div><!-- end edit modal content -->
+    </div><!-- end edit modal dialog -->
+</div><!-- end edit modal -->
+<!-- Modal Import Affectations -->
+<div class="modal fade" id="importModal" tabindex="-1"><!-- import modal wrapper -->
+    <div class="modal-dialog modal-lg"><!-- import modal dialog -->
+        <div class="modal-content"><!-- import modal content -->
+            <div class="modal-header bg-secondary text-white"><!-- import modal header -->
+                <h5 class="modal-title">Importer Affectations</h5><!-- import modal title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button><!-- import modal close -->
+            </div><!-- end import modal header -->
+            <form action="process_affectation.php" method="POST" id="importFormAffectations"><!-- import form -->
+                <input type="hidden" name="action" value="import"><!-- import action -->
+                <input type="hidden" name="rows" id="importRowsAffectations"><!-- import rows payload -->
+                <div class="modal-body"><!-- import modal body -->
+                    <div class="mb-3"><!-- import file group -->
+                        <label class="form-label">Fichier Excel (.xlsx ou .csv)</label><!-- import label -->
+                        <input type="file" class="form-control" id="importFileAffectations" accept=".xlsx,.xls,.csv" required><!-- import file input -->
+                        <small class="text-muted">Colonnes: code_barre ou materiel_id, username ou email ou utilisateur_id, date_debut, motif, date_fin, etat_depart, etat_retour, statut, observations</small><!-- import help -->
+                    </div><!-- end import file group -->
+                </div><!-- end import modal body -->
+                <div class="modal-footer"><!-- import modal footer -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button><!-- import cancel -->
+                    <button type="submit" class="btn btn-secondary">Importer</button><!-- import submit -->
+                </div><!-- end import modal footer -->
+            </form><!-- end import form -->
+        </div><!-- end import modal content -->
+    </div><!-- end import modal dialog -->
+</div><!-- end import modal -->
 <!-- Filtres -->
 <div class="card mb-4">
     <div class="card-body">
@@ -83,7 +181,7 @@ $affectations = $pdo->query($query)->fetchAll();
         <div class="table-responsive">
             <table class="table table-hover" id="affectationsTable">
                 <thead class="table-dark">
-                    <tr>
+                    <tr data-affectation-id="<?php echo $aff['id']; ?>" data-materiel-id="<?php echo $aff['materiel_id']; ?>" data-utilisateur-id="<?php echo $aff['utilisateur_id']; ?>" data-date-debut="<?php echo escape($aff['date_debut']); ?>" data-date-fin="<?php echo escape($aff['date_fin']); ?>" data-statut="<?php echo escape($aff['statut']); ?>" data-motif="<?php echo escape($aff['motif']); ?>" data-etat-depart="<?php echo escape($aff['etat_depart']); ?>" data-etat-retour="<?php echo escape($aff['etat_retour']); ?>" data-observations="<?php echo escape($aff['observations']); ?>" data-materiel-label="<?php echo escape($aff['code_barre'] . ' - ' . $aff['marque'] . ' ' . $aff['modele']); ?>" data-utilisateur-label="<?php echo escape($aff['utilisateur_nom']); ?>"><!-- row data -->
                         <th>ID</th>
                         <th>Matériel</th>
                         <th>Utilisateur</th>
@@ -126,6 +224,10 @@ $affectations = $pdo->query($query)->fetchAll();
                                         title="Voir détails">
                                     <i class="bi bi-eye"></i>
                                 </button>
+                                <?php if (isGestionnaire()): ?><!-- gestionnaire actions -->
+                                <button class="btn btn-outline-warning" onclick="openEditModalById(<?php echo $aff['id']; ?>)" title="Modifier"><i class="bi bi-pencil"></i></button><!-- edit button -->
+                                <button class="btn btn-outline-danger" onclick="deleteAffectation(<?php echo $aff['id']; ?>)" title="Supprimer"><i class="bi bi-trash"></i></button><!-- delete button -->
+                                <?php endif; ?><!-- end gestionnaire actions -->
                                 
                                 <?php if (isGestionnaire() && $aff['statut'] == 'en_attente'): ?>
                                 <button class="btn btn-outline-success" 
@@ -182,7 +284,7 @@ $affectations = $pdo->query($query)->fetchAll();
                                 ")->fetchAll();
                                 
                                 foreach ($materiels as $mat): ?>
-                                <option value="<?php echo $mat['id']; ?>">
+                                <option value="<?php echo $mat['id']; ?>" <?php echo $preselectedMaterielId === (int)$mat['id'] ? 'selected' : ''; ?>><!-- preselect materiel -->
                                     <?php echo escape($mat['code_barre'] . ' - ' . $mat['marque'] . ' ' . $mat['modele']); ?>
                                 </option>
                                 <?php endforeach; ?>
@@ -294,9 +396,36 @@ function filterTable() {
     });
 }
 
-function viewAffectation(id) {
-    window.location.href = 'affectation_details.php?id=' + id;
-}
+function openEditModalById(id) { // Open edit modal by id
+    var row = document.querySelector('tr[data-affectation-id="' + id + '"]'); // Locate row
+    if (!row) { // Guard missing row
+        alert('Affectation introuvable.'); // Alert missing row
+        return; // Stop
+    } // End guard
+    openEditModal(row); // Populate and show modal
+} // End openEditModalById
+function openEditModal(row) { // Populate edit modal
+    var dataset = row.dataset; // Row dataset
+    document.getElementById('editAffectationId').value = dataset.affectationId || ''; // Set id
+    document.getElementById('editMateriel').value = dataset.materielLabel || ''; // Set materiel label
+    document.getElementById('editUtilisateur').value = dataset.utilisateurLabel || ''; // Set user label
+    document.getElementById('editDateDebut').value = dataset.dateDebut || ''; // Set start date
+    document.getElementById('editDateFin').value = dataset.dateFin || ''; // Set end date
+    document.getElementById('editMotif').value = dataset.motif || ''; // Set motif
+    document.getElementById('editEtatDepart').value = dataset.etatDepart || 'bon'; // Set start condition
+    document.getElementById('editEtatRetour').value = dataset.etatRetour || ''; // Set return condition
+    document.getElementById('editObservations').value = dataset.observations || ''; // Set observations
+    var modal = new bootstrap.Modal(document.getElementById('editModal')); // Init modal
+    modal.show(); // Show modal
+} // End openEditModal
+function viewAffectation(id) { // View affectation
+    openEditModalById(id); // Open edit modal
+} // End viewAffectation
+function deleteAffectation(id) { // Delete affectation
+    if (confirm('Supprimer cette affectation ?')) { // Confirm deletion
+        window.location.href = 'process_affectation.php?action=delete&id=' + id; // Redirect to delete
+    } // End confirm
+} // End deleteAffectation
 
 function approveAffectation(id) {
     if (confirm('Approuver cette affectation ?')) {
@@ -321,6 +450,33 @@ function returnMaterial(id) {
         }
     }
 }
+var importFormAffectations = document.getElementById('importFormAffectations'); // Locate import form
+if (importFormAffectations) { // Guard when form exists
+    importFormAffectations.addEventListener('submit', function(event) { // Bind import submit
+        event.preventDefault(); // Stop default submit
+        var form = this; // Capture form
+        var fileInput = document.getElementById('importFileAffectations'); // Resolve file input
+        var file = fileInput ? fileInput.files[0] : null; // Read file
+        if (!file) { // Validate file
+            alert('Veuillez choisir un fichier Excel.'); // Alert missing file
+            return; // Stop handler
+        } // End file validation
+        if (typeof XLSX === 'undefined') { // Ensure XLSX is available
+            alert('Librairie XLSX manquante.'); // Alert missing lib
+            return; // Stop handler
+        } // End XLSX check
+        var reader = new FileReader(); // Create reader
+        reader.onload = function(loadEvent) { // Handle file load
+            var data = new Uint8Array(loadEvent.target.result); // Read array buffer
+            var workbook = XLSX.read(data, { type: 'array', cellDates: true }); // Parse workbook
+            var sheetName = workbook.SheetNames[0]; // Select first sheet
+            var rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' }); // Convert to rows
+            document.getElementById('importRowsAffectations').value = JSON.stringify(rows); // Fill payload
+            form.submit(); // Submit form
+        }; // End load handler
+        reader.readAsArrayBuffer(file); // Start reading
+    }); // End import submit binding
+} // End import form guard
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

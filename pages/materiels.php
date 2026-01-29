@@ -20,7 +20,9 @@ $materiels = $pdo->query($query)->fetchAll();
             <i class="bi bi-plus-circle"></i> Ajouter
         </button>
         
-        <button type="button" class="btn btn-success" onclick="exportToExcel()">
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal"><i class="bi bi-file-earmark-arrow-up"></i> Importer Excel</button><!-- import button -->
+
+        <button type="button" class="btn btn-success" onclick="exportTableToExcel('materielsTable', 'materiels')"><!-- export button -->
             <i class="bi bi-file-excel"></i> Excel
         </button>
         
@@ -287,6 +289,32 @@ $materiels = $pdo->query($query)->fetchAll();
     </div>
 </div>
 
+<!-- Modal Import Materiels -->
+<div class="modal fade" id="importModal" tabindex="-1"><!-- import modal wrapper -->
+    <div class="modal-dialog modal-lg"><!-- import modal dialog -->
+        <div class="modal-content"><!-- import modal content -->
+            <div class="modal-header bg-secondary text-white"><!-- import modal header -->
+                <h5 class="modal-title">Importer des Materiels</h5><!-- import modal title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button><!-- import modal close -->
+            </div><!-- end import modal header -->
+            <form action="process_materiel.php" method="POST" id="importForm"><!-- import form -->
+                <input type="hidden" name="action" value="import"><!-- import action -->
+                <input type="hidden" name="rows" id="importRows"><!-- import rows payload -->
+                <div class="modal-body"><!-- import modal body -->
+                    <div class="mb-3"><!-- import file group -->
+                        <label class="form-label">Fichier Excel (.xlsx ou .csv)</label><!-- import label -->
+                        <input type="file" class="form-control" id="importFile" accept=".xlsx,.xls,.csv" required><!-- import file input -->
+                        <small class="text-muted">Colonnes: type, marque, modele, numero_serie, caracteristiques, date_acquisition, prix, etat, statut, localisation, commentaires</small><!-- import help -->
+                    </div><!-- end import file group -->
+                </div><!-- end import modal body -->
+                <div class="modal-footer"><!-- import modal footer -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button><!-- import cancel -->
+                    <button type="submit" class="btn btn-secondary">Importer</button><!-- import submit -->
+                </div><!-- end import modal footer -->
+            </form><!-- end import form -->
+        </div><!-- end import modal content -->
+    </div><!-- end import modal dialog -->
+</div><!-- end import modal -->
 <!-- JavaScript -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -304,7 +332,65 @@ $(document).ready(function() {
     });
 });
 
-function filterTable() {
-    var type = $('#filterType').val().toLowerCase();
-    var statut = $('#filterStatut').val().toLowerCase();
-    var etat = $('#filterEtat').
+function filterTable() { // Filter table rows
+    var type = $('#filterType').val().toLowerCase(); // Read type filter
+    var statut = $('#filterStatut').val().toLowerCase(); // Read status filter
+    var etat = $('#filterEtat').val().toLowerCase(); // Read condition filter
+    var search = $('#searchInput').val().toLowerCase(); // Read search text
+    $('#materielsTable tbody tr').each(function() { // Iterate rows
+        var row = $(this); // Current row
+        var rowType = row.find('td:eq(1)').text().toLowerCase(); // Row type
+        var rowEtat = row.find('td:eq(4)').text().toLowerCase(); // Row condition
+        var rowStatut = row.find('td:eq(5)').text().toLowerCase(); // Row status
+        var rowText = row.text().toLowerCase(); // Row text
+        var show = true; // Visibility flag
+        if (type && !rowType.includes(type)) show = false; // Apply type filter
+        if (statut && !rowStatut.includes(statut)) show = false; // Apply status filter
+        if (etat && !rowEtat.includes(etat)) show = false; // Apply condition filter
+        if (search && !rowText.includes(search)) show = false; // Apply search filter
+        show ? row.show() : row.hide(); // Toggle visibility
+    }); // End row loop
+} // End filterTable
+function viewMateriel(id) { // View material
+    window.location.href = 'edit_materiel.php?id=' + id; // Redirect to edit page
+} // End viewMateriel
+function editMateriel(id) { // Edit material
+    window.location.href = 'edit_materiel.php?id=' + id; // Redirect to edit page
+} // End editMateriel
+function affecterMateriel(id) { // Assign material
+    window.location.href = 'affectations.php?materiel_id=' + id; // Redirect to affectations
+} // End affecterMateriel
+function deleteMateriel(id) { // Delete material
+    if (confirm('Supprimer ce materiel ?')) { // Confirm deletion
+        window.location.href = 'process_materiel.php?action=delete&id=' + id; // Redirect to delete
+    } // End confirm
+} // End deleteMateriel
+var importForm = document.getElementById('importForm'); // Locate import form
+if (importForm) { // Guard when form exists
+    importForm.addEventListener('submit', function(event) { // Bind import submit
+        event.preventDefault(); // Stop default submit
+        var form = this; // Capture form
+        var fileInput = document.getElementById('importFile'); // Resolve file input
+        var file = fileInput ? fileInput.files[0] : null; // Read file
+        if (!file) { // Validate file
+            alert('Veuillez choisir un fichier Excel.'); // Alert missing file
+            return; // Stop handler
+        } // End file validation
+        if (typeof XLSX === 'undefined') { // Ensure XLSX is available
+            alert('Librairie XLSX manquante.'); // Alert missing lib
+            return; // Stop handler
+        } // End XLSX check
+        var reader = new FileReader(); // Create reader
+        reader.onload = function(loadEvent) { // Handle file load
+            var data = new Uint8Array(loadEvent.target.result); // Read array buffer
+            var workbook = XLSX.read(data, { type: 'array', cellDates: true }); // Parse workbook
+            var sheetName = workbook.SheetNames[0]; // Select first sheet
+            var rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' }); // Convert to rows
+            document.getElementById('importRows').value = JSON.stringify(rows); // Fill payload
+            form.submit(); // Submit form
+        }; // End load handler
+        reader.readAsArrayBuffer(file); // Start reading
+    }); // End import submit binding
+} // End import form guard
+</script><!-- end page script -->
+<?php require_once '../includes/footer.php'; ?><!-- include footer -->

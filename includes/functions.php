@@ -74,7 +74,25 @@ function formatDate($date, $format = 'd/m/Y') {
     try { $dateObj = new DateTime($date); return $dateObj->format($format); } 
     catch (Exception $e) { return '-'; }
 }
-
+function generateBarcode($type) { // Generate a unique barcode string
+    $prefixMap = [ // Map material type to prefix
+        'ordinateur' => 'LAP', // Laptop prefix
+        'ordinateur_bureau' => 'DESK', // Desktop prefix
+        'ecran' => 'SCR', // Screen prefix
+        'imprimante' => 'PRN', // Printer prefix
+        'scanner' => 'SCN', // Scanner prefix
+        'ventilateur' => 'FAN', // Fan prefix
+        'clavier' => 'KBD', // Keyboard prefix
+        'souris' => 'MSE', // Mouse prefix
+        'onduleur' => 'UPS', // Ups prefix
+        'serveur' => 'SRV', // Server prefix
+        'autre' => 'MAT' // Generic prefix
+    ]; // End prefix map
+    $prefix = $prefixMap[$type] ?? 'MAT'; // Resolve prefix
+    $timestamp = date('YmdHis'); // Add timestamp for uniqueness
+    $random = strtoupper(substr(bin2hex(random_bytes(3)), 0, 6)); // Add random suffix
+    return 'ONACC-' . $prefix . '-' . $timestamp . '-' . $random; // Build barcode
+} // End generateBarcode
  #Formate un montant en devise
 function formatCurrency($amount, $currency = 'FCFA') {
     if (is_null($amount) || $amount === '' || $amount == 0) {
