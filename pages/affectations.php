@@ -180,7 +180,7 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
         <div class="table-responsive">
             <table class="table table-hover" id="affectationsTable">
                 <thead class="table-dark">
-                    <tr data-affectation-id="<?php echo $aff['id']; ?>" data-materiel-id="<?php echo $aff['materiel_id']; ?>" data-utilisateur-id="<?php echo $aff['utilisateur_id']; ?>" data-date-debut="<?php echo escape($aff['date_debut']); ?>" data-date-fin="<?php echo escape($aff['date_fin']); ?>" data-statut="<?php echo escape($aff['statut']); ?>" data-motif="<?php echo escape($aff['motif']); ?>" data-etat-depart="<?php echo escape($aff['etat_depart']); ?>" data-etat-retour="<?php echo escape($aff['etat_retour']); ?>" data-observations="<?php echo escape($aff['observations']); ?>" data-materiel-label="<?php echo escape($aff['code_barre'] . ' - ' . $aff['marque'] . ' ' . $aff['modele']); ?>" data-utilisateur-label="<?php echo escape($aff['utilisateur_nom']); ?>"><!-- row data -->
+                    <tr><!-- header row -->
                         <th>ID</th>
                         <th>Matériel</th>
                         <th>Utilisateur</th>
@@ -193,7 +193,7 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
                 </thead>
                 <tbody>
                     <?php foreach ($affectations as $aff): ?>
-                    <tr>
+                    <tr data-affectation-id="<?php echo $aff['id']; ?>" data-materiel-id="<?php echo $aff['materiel_id']; ?>" data-utilisateur-id="<?php echo $aff['utilisateur_id']; ?>" data-date-debut="<?php echo escape($aff['date_debut']); ?>" data-date-fin="<?php echo escape($aff['date_fin']); ?>" data-statut="<?php echo escape($aff['statut']); ?>" data-motif="<?php echo escape($aff['motif']); ?>" data-etat-depart="<?php echo escape($aff['etat_depart']); ?>" data-etat-retour="<?php echo escape($aff['etat_retour']); ?>" data-observations="<?php echo escape($aff['observations']); ?>" data-materiel-label="<?php echo escape($aff['code_barre'] . ' - ' . $aff['marque'] . ' ' . $aff['modele']); ?>" data-utilisateur-label="<?php echo escape($aff['utilisateur_nom']); ?>"><!-- row data -->
                         <td><?php echo $aff['id']; ?></td>
                         <td>
                             <strong><?php echo escape($aff['code_barre']); ?></strong><br>
