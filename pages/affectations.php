@@ -420,7 +420,7 @@ function openEditModal(row) { // Populate edit modal
     modal.show(); // Show modal
 } // End openEditModal
 function viewAffectation(id) { // View affectation
-    openEditModalById(id); // Open edit modal
+    window.location.href = 'affectation_details.php?id=' + id; // Redirect to details
 } // End viewAffectation
 function deleteAffectation(id) { // Delete affectation
     if (confirm('Supprimer cette affectation ?')) { // Confirm deletion
