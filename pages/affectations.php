@@ -193,7 +193,7 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
                 </thead>
                 <tbody>
                     <?php foreach ($affectations as $aff): ?>
-                    <tr data-affectation-id="<?php echo $aff['id']; ?>" data-materiel-id="<?php echo $aff['materiel_id']; ?>" data-utilisateur-id="<?php echo $aff['utilisateur_id']; ?>" data-date-debut="<?php echo escape($aff['date_debut']); ?>" data-date-fin="<?php echo escape($aff['date_fin']); ?>" data-statut="<?php echo escape($aff['statut']); ?>" data-motif="<?php echo escape($aff['motif']); ?>" data-etat-depart="<?php echo escape($aff['etat_depart']); ?>" data-etat-retour="<?php echo escape($aff['etat_retour']); ?>" data-observations="<?php echo escape($aff['observations']); ?>" data-materiel-label="<?php echo escape($aff['code_barre'] . ' - ' . $aff['marque'] . ' ' . $aff['modele']); ?>" data-utilisateur-label="<?php echo escape($aff['utilisateur_nom']); ?>"><!-- row data -->
+                    <tr data-affectation-id="<?php echo $aff['id']; ?>" data-materiel-id="<?php echo $aff['materiel_id']; ?>" data-utilisateur-id="<?php echo $aff['utilisateur_id']; ?>" data-date-debut="<?php echo escape($aff['date_debut']); ?>" data-date-fin="<?php echo escape($aff['date_fin']); ?>" data-statut="<?php echo escape($aff['statut']); ?>" data-departement="<?php echo escape($aff['departement']); ?>" data-motif="<?php echo escape($aff['motif']); ?>" data-etat-depart="<?php echo escape($aff['etat_depart']); ?>" data-etat-retour="<?php echo escape($aff['etat_retour']); ?>" data-observations="<?php echo escape($aff['observations']); ?>" data-materiel-label="<?php echo escape($aff['code_barre'] . ' - ' . $aff['marque'] . ' ' . $aff['modele']); ?>" data-utilisateur-label="<?php echo escape($aff['utilisateur_nom']); ?>"><!-- row data -->
                         <td><?php echo $aff['id']; ?></td>
                         <td>
                             <strong><?php echo escape($aff['code_barre']); ?></strong><br>
@@ -362,6 +362,7 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
 
 <script>
 var affectationsTable = null; // DataTable instance
+var affectationsFilters = { statut: '', departement: '', dateDebut: '', search: '' }; // Filter state
 $(document).ready(function() {
     affectationsTable = $('#affectationsTable').DataTable({ // Init DataTable
         "pageLength": 25, // Page length
@@ -374,27 +375,37 @@ $(document).ready(function() {
     $('#searchInput').on('keyup', applyAffectationsFilters); // Bind search keyup
     applyAffectationsFilters(); // Apply filters on load
 }); // End document ready
-function formatDateForSearch(value) { // Format date for search
-    if (!value) { // Guard empty
-        return ''; // Return empty
-    } // End empty guard
-    var parts = value.split('-'); // Split yyyy-mm-dd
-    if (parts.length !== 3) { // Validate parts
-        return value; // Return raw
-    } // End parts guard
-    return parts[2] + '/' + parts[1] + '/' + parts[0]; // Return dd/mm/yyyy
-} // End formatDateForSearch
+$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) { // Custom filter hook
+    if (!settings.nTable || settings.nTable.id !== 'affectationsTable') { // Scope to table
+        return true; // Skip other tables
+    } // End table guard
+    var rowNode = settings.aoData[dataIndex] ? settings.aoData[dataIndex].nTr : null; // Row node
+    var dataset = rowNode ? rowNode.dataset : {}; // Row dataset
+    var rowStatut = (dataset.statut || '').toLowerCase(); // Row status
+    var rowDepartement = (dataset.departement || '').toLowerCase(); // Row departement
+    var rowDate = dataset.dateDebut || ''; // Row date
+    var rowText = rowNode ? rowNode.textContent.toLowerCase() : ''; // Row text
+    if (affectationsFilters.statut && rowStatut !== affectationsFilters.statut) { // Apply status filter
+        return false; // Exclude row
+    } // End status filter
+    if (affectationsFilters.departement && !rowDepartement.includes(affectationsFilters.departement)) { // Apply departement filter
+        return false; // Exclude row
+    } // End departement filter
+    if (affectationsFilters.dateDebut && rowDate !== affectationsFilters.dateDebut) { // Apply date filter
+        return false; // Exclude row
+    } // End date filter
+    if (affectationsFilters.search && !rowText.includes(affectationsFilters.search)) { // Apply search filter
+        return false; // Exclude row
+    } // End search filter
+    return true; // Keep row
+}); // End custom filter hook
 
 function applyAffectationsFilters() { // Filter table rows
-    var statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
-    var departement = ($('#filterDepartement').val() || '').toLowerCase(); // Read departement filter
-    var dateDebut = formatDateForSearch($('#filterDateDebut').val() || ''); // Read date filter
-    var search = ($('#searchInput').val() || '').toLowerCase(); // Read search text
+    affectationsFilters.statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
+    affectationsFilters.departement = ($('#filterDepartement').val() || '').toLowerCase(); // Read departement filter
+    affectationsFilters.dateDebut = $('#filterDateDebut').val() || ''; // Read date filter
+    affectationsFilters.search = ($('#searchInput').val() || '').toLowerCase(); // Read search text
     if (affectationsTable) { // Ensure DataTable exists
-        affectationsTable.column(5).search(statut, false, false); // Apply status filter
-        affectationsTable.column(2).search(departement, false, false); // Apply departement filter
-        affectationsTable.column(3).search(dateDebut, false, false); // Apply date filter
-        affectationsTable.search(search, false, false); // Apply global search
         affectationsTable.draw(); // Redraw table
         return; // Stop fallback
     } // End DataTable guard
