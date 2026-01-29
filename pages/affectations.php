@@ -32,7 +32,7 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
             <i class="bi bi-plus-circle"></i> Nouvelle Affectation
         </button>
-        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal"><i class="bi bi-file-earmark-arrow-up"></i> Importer Excel</button><!-- import button -->
+        <!-- <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal"><i class="bi bi-file-earmark-arrow-up"></i> Importer Excel</button>import button -->
     </div>
 </div>
 
