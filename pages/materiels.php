@@ -332,32 +332,17 @@ $(document).ready(function() {
         } // End language config
     }); // End DataTable init
 }); // End document ready
-$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) { // Custom filter hook
-    if (!settings.nTable || settings.nTable.id !== 'materielsTable') { // Scope to table
-        return true; // Skip other tables
-    } // End table guard
+
+function filterTable() { // Filter table rows
     var type = ($('#filterType').val() || '').toLowerCase(); // Read type filter
     var statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
     var etat = ($('#filterEtat').val() || '').toLowerCase(); // Read condition filter
-    var rowType = (data[1] || '').toLowerCase(); // Read row type
-    var rowEtat = (data[4] || '').toLowerCase(); // Read row condition
-    var rowStatut = (data[5] || '').toLowerCase(); // Read row status
-    if (type && !rowType.includes(type)) { // Apply type filter
-        return false; // Exclude row
-    } // End type filter
-    if (statut && !rowStatut.includes(statut)) { // Apply status filter
-        return false; // Exclude row
-    } // End status filter
-    if (etat && !rowEtat.includes(etat)) { // Apply condition filter
-        return false; // Exclude row
-    } // End condition filter
-    return true; // Keep row
-}); // End custom filter hook
-
-function filterTable() { // Filter table rows
     var search = ($('#searchInput').val() || '').toLowerCase(); // Read search text
     if (materielsTable) { // Ensure DataTable exists
-        materielsTable.search(search); // Apply global search
+        materielsTable.column(1).search(type, false, false); // Apply type filter
+        materielsTable.column(5).search(statut, false, false); // Apply status filter
+        materielsTable.column(4).search(etat, false, false); // Apply condition filter
+        materielsTable.search(search, false, false); // Apply global search
         materielsTable.draw(); // Redraw table
         return; // Stop fallback
     } // End DataTable guard

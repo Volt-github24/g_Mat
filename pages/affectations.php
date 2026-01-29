@@ -372,39 +372,27 @@ $(document).ready(function() {
         } // End language config
     }); // End DataTable init
 }); // End document ready
-$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) { // Custom filter hook
-    if (!settings.nTable || settings.nTable.id !== 'affectationsTable') { // Scope to table
-        return true; // Skip other tables
-    } // End table guard
-    var statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
-    var departement = ($('#filterDepartement').val() || '').toLowerCase(); // Read departement filter
-    var dateDebut = $('#filterDateDebut').val() || ''; // Read start date filter
-    var rowStatut = (data[5] || '').toLowerCase(); // Read row status
-    var rowDepartement = (data[2] || '').toLowerCase(); // Read row departement
-    var rowDate = (data[3] || '').toString(); // Read row date
-    var rowDateIso = ''; // Normalized row date
-    if (rowDate.includes('/')) { // Handle dd/mm/yyyy
-        var parts = rowDate.split('/'); // Split date parts
-        if (parts.length === 3) { // Validate parts
-            rowDateIso = parts[2] + '-' + parts[1] + '-' + parts[0]; // Build yyyy-mm-dd
-        } // End parts validation
-    } // End date parse
-    if (statut && !rowStatut.includes(statut)) { // Apply status filter
-        return false; // Exclude row
-    } // End status filter
-    if (departement && !rowDepartement.includes(departement)) { // Apply departement filter
-        return false; // Exclude row
-    } // End departement filter
-    if (dateDebut && rowDateIso !== dateDebut) { // Apply date filter
-        return false; // Exclude row
-    } // End date filter
-    return true; // Keep row
-}); // End custom filter hook
+function formatDateForSearch(value) { // Format date for search
+    if (!value) { // Guard empty
+        return ''; // Return empty
+    } // End empty guard
+    var parts = value.split('-'); // Split yyyy-mm-dd
+    if (parts.length !== 3) { // Validate parts
+        return value; // Return raw
+    } // End parts guard
+    return parts[2] + '/' + parts[1] + '/' + parts[0]; // Return dd/mm/yyyy
+} // End formatDateForSearch
 
 function filterTable() {
+    var statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
+    var departement = ($('#filterDepartement').val() || '').toLowerCase(); // Read departement filter
+    var dateDebut = formatDateForSearch($('#filterDateDebut').val() || ''); // Read date filter
     var search = ($('#searchInput').val() || '').toLowerCase(); // Read search text
     if (affectationsTable) { // Ensure DataTable exists
-        affectationsTable.search(search); // Apply global search
+        affectationsTable.column(5).search(statut, false, false); // Apply status filter
+        affectationsTable.column(2).search(departement, false, false); // Apply departement filter
+        affectationsTable.column(3).search(dateDebut, false, false); // Apply date filter
+        affectationsTable.search(search, false, false); // Apply global search
         affectationsTable.draw(); // Redraw table
         return; // Stop fallback
     } // End DataTable guard

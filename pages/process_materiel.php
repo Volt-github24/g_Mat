@@ -161,59 +161,56 @@ switch ($action) {
         exit(); // Stop
         break; // End import case
     case 'edit':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = $_POST['id'];
-            
-            try {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Only allow POST
+            $id = (int)$_POST['id']; // Read id
+            try { // Start edit try
+                $pdo->beginTransaction(); // Open transaction
+                $current_stmt = $pdo->prepare("SELECT statut FROM materiels WHERE id = ?"); // Fetch current status
+                $current_stmt->execute([$id]); // Execute fetch
+                $current = $current_stmt->fetch(); // Read current row
+                $previousStatut = $current['statut'] ?? null; // Store previous status
                 // Récupérer les données
-                $type = $_POST['type'];
-                $marque = $_POST['marque'];
-                $modele = $_POST['modele'];
-                $numero_serie = $_POST['numero_serie'] ?? null;
-                $caracteristiques = $_POST['caracteristiques'] ?? null;
-                $date_acquisition = $_POST['date_acquisition'] ?? null;
-                $prix = $_POST['prix'] ?? null;
-                $etat = $_POST['etat'];
-                $statut = $_POST['statut'];
-                $localisation = $_POST['localisation'] ?? null;
-                $commentaires = $_POST['commentaires'] ?? null;
-                
+                $type = $_POST['type']; // Read type
+                $marque = $_POST['marque']; // Read marque
+                $modele = $_POST['modele']; // Read modele
+                $numero_serie = $_POST['numero_serie'] ?? null; // Read serial
+                $caracteristiques = $_POST['caracteristiques'] ?? null; // Read specs
+                $date_acquisition = $_POST['date_acquisition'] ?? null; // Read acquisition date
+                $prix = $_POST['prix'] ?? null; // Read price
+                $etat = $_POST['etat']; // Read condition
+                $statut = $_POST['statut']; // Read status
+                $localisation = $_POST['localisation'] ?? null; // Read location
+                $commentaires = $_POST['commentaires'] ?? null; // Read comments
                 // Mettre à jour
-                $stmt = $pdo->prepare("
-                    UPDATE materiels SET
-                    type = ?, marque = ?, modele = ?, numero_serie = ?, 
-                    caracteristiques = ?, date_acquisition = ?, prix = ?,
-                    etat = ?, statut = ?, localisation = ?, commentaires = ?
-                    WHERE id = ?
-                ");
-                
-                $stmt->execute([
-                    $type, $marque, $modele, $numero_serie,
-                    $caracteristiques, $date_acquisition, $prix,
-                    $etat, $statut, $localisation, $commentaires,
-                    $id
-                ]);
-                
-                // Logger l'action
-                logAction($id, 'MODIFICATION', "Matériel mis à jour");
-                
-                $_SESSION['notification'] = [
-                    'type' => 'success',
-                    'message' => 'Matériel mis à jour avec succès'
-                ];
-                
-                header('Location: materiels.php');
-                exit();
-                
-            } catch (PDOException $e) {
-                $_SESSION['notification'] = [
-                    'type' => 'error',
-                    'message' => 'Erreur: ' . $e->getMessage()
-                ];
-                header('Location: edit_materiel.php?id=' . $id);
-                exit();
-            }
-        }
+                $stmt = $pdo->prepare("UPDATE materiels SET type = ?, marque = ?, modele = ?, numero_serie = ?, caracteristiques = ?, date_acquisition = ?, prix = ?, etat = ?, statut = ?, localisation = ?, commentaires = ? WHERE id = ?"); // Prepare update
+                $stmt->execute([ // Execute update
+                    $type, $marque, $modele, $numero_serie, // Core fields
+                    $caracteristiques, $date_acquisition, $prix, // Extra fields
+                    $etat, $statut, $localisation, $commentaires, // Status fields
+                    $id // Material id
+                ]); // End execute
+                if ($previousStatut === 'affecte' && $statut !== 'affecte') { // Status changed away from affecte
+                    $delete_stmt = $pdo->prepare("DELETE FROM affectations WHERE materiel_id = ? AND statut IN ('en_attente', 'approuve') AND date_fin IS NULL"); // Delete active affectations
+                    $delete_stmt->execute([$id]); // Execute delete
+                } // End status change guard
+                logAction($id, 'MODIFICATION', "Matériel mis à jour"); // Log action
+                $pdo->commit(); // Commit transaction
+                $_SESSION['notification'] = [ // Build success notice
+                    'type' => 'success', // Success type
+                    'message' => 'Matériel mis à jour avec succès' // Success message
+                ]; // End notice
+                header('Location: materiels.php'); // Back to list
+                exit(); // Stop
+            } catch (PDOException $e) { // Handle edit error
+                $pdo->rollBack(); // Rollback transaction
+                $_SESSION['notification'] = [ // Build error notice
+                    'type' => 'error', // Error type
+                    'message' => 'Erreur: ' . $e->getMessage() // Error message
+                ]; // End notice
+                header('Location: edit_materiel.php?id=' . $id); // Back to edit
+                exit(); // Stop
+            } // End edit try
+        } // End POST guard
         break;
         
     case 'delete':
