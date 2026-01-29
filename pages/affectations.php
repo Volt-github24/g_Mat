@@ -370,6 +370,9 @@ $(document).ready(function() {
             "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json" // Language url
         } // End language config
     }); // End DataTable init
+    $('#filterStatut, #filterDepartement, #filterDateDebut').on('change', applyAffectationsFilters); // Bind filter change
+    $('#searchInput').on('keyup', applyAffectationsFilters); // Bind search keyup
+    applyAffectationsFilters(); // Apply filters on load
 }); // End document ready
 function formatDateForSearch(value) { // Format date for search
     if (!value) { // Guard empty

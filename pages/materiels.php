@@ -330,6 +330,9 @@ $(document).ready(function() {
             "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json" // Language url
         } // End language config
     }); // End DataTable init
+    $('#filterType, #filterStatut, #filterEtat').on('change', applyMaterielsFilters); // Bind filter change
+    $('#searchInput').on('keyup', applyMaterielsFilters); // Bind search keyup
+    applyMaterielsFilters(); // Apply filters on load
 }); // End document ready
 
 function applyMaterielsFilters() { // Filter table rows
