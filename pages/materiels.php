@@ -23,7 +23,7 @@ $materiels = $pdo->query($query)->fetchAll();
         <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal"><i class="bi bi-file-earmark-arrow-up"></i> Importer Excel</button><!-- import button -->
 
         <button type="button" class="btn btn-success" onclick="exportTableToExcel('materielsTable', 'materiels')"><!-- export button -->
-            <i class="bi bi-file-excel"></i> Excel
+            <i class="bi bi-file-excel"></i> Export Excel
         </button>
         
         <button type="button" class="btn btn-info" onclick="window.print()">
