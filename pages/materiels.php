@@ -322,34 +322,45 @@ $materiels = $pdo->query($query)->fetchAll();
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
+var materielsTable = null; // DataTable instance
 $(document).ready(function() {
     // Initialiser DataTable
-    $('#materielsTable').DataTable({
-        "pageLength": 25,
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json"
-        }
-    });
-});
+    materielsTable = $('#materielsTable').DataTable({ // Init DataTable
+        "pageLength": 25, // Page length
+        "language": { // Language config
+            "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json" // Language url
+        } // End language config
+    }); // End DataTable init
+}); // End document ready
+$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) { // Custom filter hook
+    if (!settings.nTable || settings.nTable.id !== 'materielsTable') { // Scope to table
+        return true; // Skip other tables
+    } // End table guard
+    var type = ($('#filterType').val() || '').toLowerCase(); // Read type filter
+    var statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
+    var etat = ($('#filterEtat').val() || '').toLowerCase(); // Read condition filter
+    var rowType = (data[1] || '').toLowerCase(); // Read row type
+    var rowEtat = (data[4] || '').toLowerCase(); // Read row condition
+    var rowStatut = (data[5] || '').toLowerCase(); // Read row status
+    if (type && !rowType.includes(type)) { // Apply type filter
+        return false; // Exclude row
+    } // End type filter
+    if (statut && !rowStatut.includes(statut)) { // Apply status filter
+        return false; // Exclude row
+    } // End status filter
+    if (etat && !rowEtat.includes(etat)) { // Apply condition filter
+        return false; // Exclude row
+    } // End condition filter
+    return true; // Keep row
+}); // End custom filter hook
 
 function filterTable() { // Filter table rows
-    var type = $('#filterType').val().toLowerCase(); // Read type filter
-    var statut = $('#filterStatut').val().toLowerCase(); // Read status filter
-    var etat = $('#filterEtat').val().toLowerCase(); // Read condition filter
-    var search = $('#searchInput').val().toLowerCase(); // Read search text
-    $('#materielsTable tbody tr').each(function() { // Iterate rows
-        var row = $(this); // Current row
-        var rowType = row.find('td:eq(1)').text().toLowerCase(); // Row type
-        var rowEtat = row.find('td:eq(4)').text().toLowerCase(); // Row condition
-        var rowStatut = row.find('td:eq(5)').text().toLowerCase(); // Row status
-        var rowText = row.text().toLowerCase(); // Row text
-        var show = true; // Visibility flag
-        if (type && !rowType.includes(type)) show = false; // Apply type filter
-        if (statut && !rowStatut.includes(statut)) show = false; // Apply status filter
-        if (etat && !rowEtat.includes(etat)) show = false; // Apply condition filter
-        if (search && !rowText.includes(search)) show = false; // Apply search filter
-        show ? row.show() : row.hide(); // Toggle visibility
-    }); // End row loop
+    var search = ($('#searchInput').val() || '').toLowerCase(); // Read search text
+    if (materielsTable) { // Ensure DataTable exists
+        materielsTable.search(search); // Apply global search
+        materielsTable.draw(); // Redraw table
+        return; // Stop fallback
+    } // End DataTable guard
 } // End filterTable
 function viewMateriel(id) { // View material
     window.location.href = 'edit_materiel.php?id=' + id; // Redirect to edit page

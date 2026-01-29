@@ -362,38 +362,52 @@ $preselectedMaterielId = isset($_GET['materiel_id']) ? (int)$_GET['materiel_id']
 </div>
 
 <script>
+var affectationsTable = null; // DataTable instance
 $(document).ready(function() {
-    $('#affectationsTable').DataTable({
-        "pageLength": 25,
-        "order": [[0, 'desc']],
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json"
-        }
-    });
-});
+    affectationsTable = $('#affectationsTable').DataTable({ // Init DataTable
+        "pageLength": 25, // Page length
+        "order": [[0, 'desc']], // Default order
+        "language": { // Language config
+            "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json" // Language url
+        } // End language config
+    }); // End DataTable init
+}); // End document ready
+$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) { // Custom filter hook
+    if (!settings.nTable || settings.nTable.id !== 'affectationsTable') { // Scope to table
+        return true; // Skip other tables
+    } // End table guard
+    var statut = ($('#filterStatut').val() || '').toLowerCase(); // Read status filter
+    var departement = ($('#filterDepartement').val() || '').toLowerCase(); // Read departement filter
+    var dateDebut = $('#filterDateDebut').val() || ''; // Read start date filter
+    var rowStatut = (data[5] || '').toLowerCase(); // Read row status
+    var rowDepartement = (data[2] || '').toLowerCase(); // Read row departement
+    var rowDate = (data[3] || '').toString(); // Read row date
+    var rowDateIso = ''; // Normalized row date
+    if (rowDate.includes('/')) { // Handle dd/mm/yyyy
+        var parts = rowDate.split('/'); // Split date parts
+        if (parts.length === 3) { // Validate parts
+            rowDateIso = parts[2] + '-' + parts[1] + '-' + parts[0]; // Build yyyy-mm-dd
+        } // End parts validation
+    } // End date parse
+    if (statut && !rowStatut.includes(statut)) { // Apply status filter
+        return false; // Exclude row
+    } // End status filter
+    if (departement && !rowDepartement.includes(departement)) { // Apply departement filter
+        return false; // Exclude row
+    } // End departement filter
+    if (dateDebut && rowDateIso !== dateDebut) { // Apply date filter
+        return false; // Exclude row
+    } // End date filter
+    return true; // Keep row
+}); // End custom filter hook
 
 function filterTable() {
-    var statut = $('#filterStatut').val().toLowerCase();
-    var departement = $('#filterDepartement').val().toLowerCase();
-    var dateDebut = $('#filterDateDebut').val();
-    var search = $('#searchInput').val().toLowerCase();
-    
-    $('#affectationsTable tbody tr').each(function() {
-        var row = $(this);
-        var rowStatut = row.find('td:eq(5)').text().toLowerCase();
-        var rowDepartement = row.find('td:eq(2)').text().toLowerCase();
-        var rowDate = row.find('td:eq(3)').text();
-        var rowText = row.text().toLowerCase();
-        
-        var show = true;
-        
-        if (statut && !rowStatut.includes(statut)) show = false;
-        if (departement && !rowDepartement.includes(departement)) show = false;
-        if (dateDebut && rowDate !== dateDebut) show = false;
-        if (search && !rowText.includes(search)) show = false;
-        
-        show ? row.show() : row.hide();
-    });
+    var search = ($('#searchInput').val() || '').toLowerCase(); // Read search text
+    if (affectationsTable) { // Ensure DataTable exists
+        affectationsTable.search(search); // Apply global search
+        affectationsTable.draw(); // Redraw table
+        return; // Stop fallback
+    } // End DataTable guard
 }
 
 function openEditModalById(id) { // Open edit modal by id

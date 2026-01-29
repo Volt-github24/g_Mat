@@ -219,41 +219,42 @@ switch ($action) {
     case 'delete':
         $id = $_GET['id'] ?? 0;
         
-        if ($id > 0) {
-            try {
-                // Vérifier si le matériel est affecté
-                $check_stmt = $pdo->prepare("SELECT statut FROM materiels WHERE id = ?");
-                $check_stmt->execute([$id]);
-                $materiel = $check_stmt->fetch();
-                
-                if ($materiel && $materiel['statut'] === 'affecte') {
-                    $_SESSION['notification'] = [
-                        'type' => 'error',
-                        'message' => 'Impossible de supprimer un matériel affecté'
-                    ];
-                    header('Location: materiels.php');
-                    exit();
-                }
-                
-                // Supprimer
-                $stmt = $pdo->prepare("DELETE FROM materiels WHERE id = ?");
-                $stmt->execute([$id]);
-                
-                // Logger l'action
-                logAction($id, 'SUPPRESSION', "Matériel supprimé");
-                
-                $_SESSION['notification'] = [
-                    'type' => 'success',
-                    'message' => 'Matériel supprimé avec succès'
-                ];
-                
-            } catch (PDOException $e) {
-                $_SESSION['notification'] = [
-                    'type' => 'error',
-                    'message' => 'Erreur: ' . $e->getMessage()
-                ];
-            }
-        }
+        if ($id > 0) { // Validate id
+            try { // Start delete try
+                $pdo->beginTransaction(); // Open transaction
+                $check_stmt = $pdo->prepare("SELECT statut FROM materiels WHERE id = ?"); // Fetch material
+                $check_stmt->execute([$id]); // Execute fetch
+                $materiel = $check_stmt->fetch(); // Read material
+                $active_stmt = $pdo->prepare("SELECT COUNT(*) FROM affectations WHERE materiel_id = ? AND statut IN ('en_attente', 'approuve') AND date_fin IS NULL"); // Count active affectations
+                $active_stmt->execute([$id]); // Execute active check
+                $activeCount = (int)$active_stmt->fetchColumn(); // Read active count
+                if ($materiel && ($materiel['statut'] === 'affecte' || $activeCount > 0)) { // Block active delete
+                    $pdo->rollBack(); // Rollback transaction
+                    $_SESSION['notification'] = [ // Build error notice
+                        'type' => 'error', // Error type
+                        'message' => 'Impossible de supprimer un matériel avec affectations actives' // Error message
+                    ]; // End notice
+                    header('Location: materiels.php'); // Back to list
+                    exit(); // Stop
+                } // End active guard
+                $delete_aff = $pdo->prepare("DELETE FROM affectations WHERE materiel_id = ?"); // Delete related affectations
+                $delete_aff->execute([$id]); // Execute affectations delete
+                $stmt = $pdo->prepare("DELETE FROM materiels WHERE id = ?"); // Delete material
+                $stmt->execute([$id]); // Execute delete
+                logAction($id, 'SUPPRESSION', "Matériel supprimé"); // Log action
+                $pdo->commit(); // Commit transaction
+                $_SESSION['notification'] = [ // Build success notice
+                    'type' => 'success', // Success type
+                    'message' => 'Matériel supprimé avec succès' // Success message
+                ]; // End notice
+            } catch (PDOException $e) { // Handle delete error
+                $pdo->rollBack(); // Rollback transaction
+                $_SESSION['notification'] = [ // Build error notice
+                    'type' => 'error', // Error type
+                    'message' => 'Erreur: ' . $e->getMessage() // Error message
+                ]; // End notice
+            } // End delete try
+        } // End id guard
         
         header('Location: materiels.php');
         exit();

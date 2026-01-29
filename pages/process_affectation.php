@@ -140,7 +140,7 @@ switch ($action) {
                 $stmt = $pdo->prepare("DELETE FROM affectations WHERE id = ?"); // Prepare delete
                 $stmt->execute([$id]); // Execute delete
                 if ($materiel_id > 0) { // Validate materiel id
-                    $check = $pdo->prepare("SELECT COUNT(*) FROM affectations WHERE materiel_id = ? AND statut = 'approuve' AND date_fin IS NULL"); // Check active
+                    $check = $pdo->prepare("SELECT COUNT(*) FROM affectations WHERE materiel_id = ? AND statut IN ('en_attente', 'approuve') AND date_fin IS NULL"); // Check active
                     $check->execute([$materiel_id]); // Execute count
                     $activeCount = (int)$check->fetchColumn(); // Read count
                     if ($activeCount === 0) { // No active affectation
